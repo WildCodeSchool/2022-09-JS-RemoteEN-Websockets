@@ -1,12 +1,20 @@
-import { FormEventHandler, useState } from "react";
-import reactLogo from "./assets/react.svg";
+import { FormEventHandler, useEffect, useState } from "react";
+import socketIOclient, { Socket } from "socket.io-client";
 import "./App.css";
 
 function App() {
   const [messageList, setMessageList] = useState([]);
   const [nickName, setNickName] = useState("");
   const [newMessageText, setNewMessageText] = useState("");
-  const [socket, setSocket] = useState(null);
+  const [socket, setSocket] = useState<Socket<any, any>>();
+
+  useEffect(() => {
+    setSocket(socketIOclient("http://localhost:5050"));
+    return () => {
+      socket?.close();
+      setSocket(undefined);
+    }
+  }, [])
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
