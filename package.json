@@ -1,0 +1,16 @@
+{
+  "name": "chat-application-react-websockets",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently -n client,server -c green,blue -t \"HH:mm:ss\" -p \"{name} {time}\" \"npm --prefix ./client run dev\" \"npm --prefix ./server run dev\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  }
+}
