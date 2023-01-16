@@ -5,15 +5,21 @@ import { Server as WebSocketServer } from "socket.io";
 
 const app = express();
 
+const corsOrigin = "http://localhost:5173";
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: corsOrigin,
   })
 );
 
 const server = createServer(app);
 
-const websocket = new WebSocketServer(server);
+const websocket = new WebSocketServer(server, {
+  cors: {
+    origin: corsOrigin,
+  },
+});
 
 const messages = [
   {
