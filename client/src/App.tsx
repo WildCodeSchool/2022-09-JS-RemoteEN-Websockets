@@ -3,21 +3,42 @@ import socketIOclient, { Socket } from "socket.io-client";
 import "./App.css";
 
 function App() {
-  const [messageList, setMessageList] = useState([]);
+  const [messageList, setMessageList] = useState<any[]>([]);
   const [nickName, setNickName] = useState("");
   const [newMessageText, setNewMessageText] = useState("");
   const [socket, setSocket] = useState<Socket<any, any>>();
 
   useEffect(() => {
+    console.log("mount");
     setSocket(socketIOclient("http://localhost:5050"));
     return () => {
-      socket?.close();
+      console.log("unmount");
+      socket?.disconnect();
       setSocket(undefined);
-    }
-  }, [])
+    };
+  }, []);
 
+  useEffect(() => {
+    if (socket == null) return;
+    socket.on("initialMessageList", (messages: any[]) => {
+      setMessageList(messages);
+    });
+    socket.on("newMessageBroadcast", (message: any) => {
+      setMessageList((prevState) => [...prevState, message]);
+    })
+  }, [socket]);
+
+  // Handle submission of a new message
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
+    if (socket == null) return;
+    // Send new message to the websocket server
+    socket.emit("messageFromClient", {
+      text: newMessageText,
+      author: nickName,
+    });
+    // Clear out message input box after sending
+    setNewMessageText("");
   };
 
   return (
