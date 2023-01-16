@@ -34,6 +34,17 @@ websocket.on("connection", (clientSocket) => {
   clientSocket.on("disconnect", () => {
     console.log("User disconnected.");
   });
+
+  clientSocket.emit("initialMessageList", messages);
+  clientSocket.on("messageFromClient", (messageTextAndAuthor) => {
+    const newMessage = {
+      ...messageTextAndAuthor,
+      id: crypto.randomUUID(),
+    };
+    console.log("New message from client:", newMessage);
+    messages.push(newMessage);
+    websocket.emit("newMessageBroadcast", newMessage);
+  });
 });
 
 server.listen(5050);
