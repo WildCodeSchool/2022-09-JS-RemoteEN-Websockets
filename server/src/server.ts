@@ -23,6 +23,11 @@ const messages = [
   },
 ];
 
-websocket.on("connection", () => {});
+websocket.on("connection", (clientSocket) => {
+  console.log("User connected.");
+  clientSocket.on("disconnect", () => {
+    console.log("User disconnected.");
+  });
+});
 
 server.listen(5050);
