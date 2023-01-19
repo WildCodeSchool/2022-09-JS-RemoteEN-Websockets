@@ -1,9 +1,10 @@
 import { FormEventHandler, useEffect, useRef, useState } from "react";
 import socketIOclient, { Socket } from "socket.io-client";
+import { Message, MessageDraft } from "common/types/message";
 import "./App.css";
 
 function App() {
-  const [messageList, setMessageList] = useState<any[]>([]);
+  const [messageList, setMessageList] = useState<Message[]>([]);
   const [nickName, setNickName] = useState("");
   const [newMessageText, setNewMessageText] = useState("");
 
@@ -18,10 +19,10 @@ function App() {
     socketRef.current = socketIOclient("http://localhost:5050");
     // Next we register our listeners on the newly created socket
     console.log("Registering listeners...");
-    socketRef.current.on("initialMessageList", (messages: any[]) => {
+    socketRef.current.on("initialMessageList", (messages: Message[]) => {
       setMessageList(messages);
     });
-    socketRef.current.on("newMessageBroadcast", (message: any) => {
+    socketRef.current.on("newMessageBroadcast", (message: Message) => {
       setMessageList((prevState) => [...prevState, message]);
     });
   }, []);
@@ -31,10 +32,11 @@ function App() {
     e.preventDefault();
     if (socketRef.current == null) return;
     // Send new message to the websocket server
-    socketRef.current.emit("messageFromClient", {
+    const newMessage : MessageDraft = {
       text: newMessageText,
       author: nickName,
-    });
+    };
+    socketRef.current.emit("messageFromClient", newMessage);
     // Clear out message input box after sending
     setNewMessageText("");
   };

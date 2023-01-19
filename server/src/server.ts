@@ -3,6 +3,7 @@ import cors from "cors";
 import crypto from "crypto";
 import { createServer } from "http";
 import { Server as WebSocketServer } from "socket.io";
+import { Message, MessageDraft } from "common/types/message";
 
 const app = express();
 
@@ -22,7 +23,7 @@ const websocket = new WebSocketServer(server, {
   },
 });
 
-const messages = [
+const messages: Message[] = [
   {
     id: crypto.randomUUID(),
     author: "server",
@@ -37,8 +38,8 @@ websocket.on("connection", (clientSocket) => {
   });
 
   clientSocket.emit("initialMessageList", messages);
-  clientSocket.on("messageFromClient", (messageTextAndAuthor) => {
-    const newMessage = {
+  clientSocket.on("messageFromClient", (messageTextAndAuthor: MessageDraft) => {
+    const newMessage: Message = {
       ...messageTextAndAuthor,
       id: crypto.randomUUID(),
     };
