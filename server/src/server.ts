@@ -4,6 +4,11 @@ import crypto from "crypto";
 import { createServer } from "http";
 import { Server as WebSocketServer } from "socket.io";
 import { Message, MessageDraft } from "common/types/message";
+import createDOMPurify from "dompurify";
+import { JSDOM } from "jsdom";
+
+const window = new JSDOM("").window;
+const DOMPurify = createDOMPurify(window as any);
 
 const app = express();
 
@@ -40,7 +45,12 @@ websocket.on("connection", (clientSocket) => {
   clientSocket.emit("initialMessageList", messages);
   clientSocket.on("messageFromClient", (messageTextAndAuthor: MessageDraft) => {
     const newMessage: Message = {
-      ...messageTextAndAuthor,
+      author: DOMPurify.sanitize(messageTextAndAuthor.author, {
+        ALLOWED_TAGS: [],
+      }),
+      text: DOMPurify.sanitize(messageTextAndAuthor.text, {
+        ALLOWED_TAGS: ["b"],
+      }),
       id: crypto.randomUUID(),
     };
     console.log("New message from client:", newMessage);

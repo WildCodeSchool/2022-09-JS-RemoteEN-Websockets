@@ -32,7 +32,7 @@ function App() {
     e.preventDefault();
     if (socketRef.current == null) return;
     // Send new message to the websocket server
-    const newMessage : MessageDraft = {
+    const newMessage: MessageDraft = {
       text: newMessageText,
       author: nickName,
     };
@@ -47,7 +47,8 @@ function App() {
       {messageList.map((message) => {
         return (
           <div key={message.id}>
-            {message.author} : {message.text}
+            <span>{message.author}:{" "}</span>
+            <span dangerouslySetInnerHTML={{ __html: message.text }}></span>
           </div>
         );
       })}
