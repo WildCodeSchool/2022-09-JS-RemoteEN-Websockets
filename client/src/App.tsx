@@ -1,4 +1,4 @@
-import { FormEventHandler, useEffect, useState } from "react";
+import { FormEventHandler, useEffect, useRef, useState } from "react";
 import socketIOclient, { Socket } from "socket.io-client";
 import "./App.css";
 
@@ -6,34 +6,32 @@ function App() {
   const [messageList, setMessageList] = useState<any[]>([]);
   const [nickName, setNickName] = useState("");
   const [newMessageText, setNewMessageText] = useState("");
-  const [socket, setSocket] = useState<Socket<any, any>>();
 
-  useEffect(() => {
-    console.log("mount");
-    setSocket(socketIOclient("http://localhost:5050"));
-    return () => {
-      console.log("unmount");
-      socket?.disconnect();
-      setSocket(undefined);
-    };
-  }, []);
+  // Keeping a mutable reference to our socket available
+  const socketRef = useRef<Socket | null>(null);
 
+  // We make sure to initialize that socket and listeners for it once.
   useEffect(() => {
-    if (socket == null) return;
-    socket.on("initialMessageList", (messages: any[]) => {
+    // If our socket exists we don't do anything
+    if (socketRef.current != null) return;
+    // If it does not exist we initialize it to a new socket.io client
+    socketRef.current = socketIOclient("http://localhost:5050");
+    // Next we register our listeners on the newly created socket
+    console.log("Registering listeners...");
+    socketRef.current.on("initialMessageList", (messages: any[]) => {
       setMessageList(messages);
     });
-    socket.on("newMessageBroadcast", (message: any) => {
+    socketRef.current.on("newMessageBroadcast", (message: any) => {
       setMessageList((prevState) => [...prevState, message]);
-    })
-  }, [socket]);
+    });
+  }, []);
 
   // Handle submission of a new message
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
-    if (socket == null) return;
+    if (socketRef.current == null) return;
     // Send new message to the websocket server
-    socket.emit("messageFromClient", {
+    socketRef.current.emit("messageFromClient", {
       text: newMessageText,
       author: nickName,
     });
