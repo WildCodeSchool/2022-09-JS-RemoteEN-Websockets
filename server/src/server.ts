@@ -13,7 +13,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { Message, MessageDraft } from "common/types/message";
 import { User, UserDraft, UserView } from "common/types/user";
 import MainRouter from "./mainRouter";
-import { users } from "./domains/authentication/model";
+import { findUserByUsername } from "./domains/authentication/model";
 
 const window = new JSDOM("").window;
 const DOMPurify = createDOMPurify(window as any);
@@ -42,7 +42,7 @@ const websocket = new WebSocketServer(server, {
 
 const messages: Message[] = [];
 
-websocket.on("connection", (clientSocket) => {
+websocket.on("connection", async (clientSocket) => {
   console.log("User connected.");
   clientSocket.on("disconnect", () => {
     console.log("User disconnected.");
@@ -68,9 +68,9 @@ websocket.on("connection", (clientSocket) => {
     return;
   }
 
-  const user = users.find(
-    (user) => user.username.toLowerCase() === payload.sub
-  );
+  const subject: string = payload.sub as string;
+  const user = await findUserByUsername(subject);
+
   if (user == null) {
     console.log("Invalid credentials.");
     clientSocket.emit("errorUnauthorized");

@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import { users } from "./model";
+import { createUser, findUserByUsername } from "./model";
 import * as argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import { UserDraft } from "common/types/user";
@@ -9,7 +9,7 @@ export interface LoginUserRequestBody {
   password: string;
 }
 
-export const loginUser: RequestHandler<{}, {}, LoginUserRequestBody> = (
+export const loginUser: RequestHandler<{}, {}, LoginUserRequestBody> = async (
   req,
   res
 ) => {
@@ -20,9 +20,8 @@ export const loginUser: RequestHandler<{}, {}, LoginUserRequestBody> = (
     return;
   }
 
-  const user = users.find(
-    (user) => user.username.toLowerCase() === username.toLowerCase()
-  );
+  const user = await findUserByUsername(username);
+
   if (user == null) {
     res.status(403).send("Wrong credentials.");
     return;
@@ -58,6 +57,13 @@ export const registerUser: RequestHandler<{}, {}, RegisterUserRequestBody> = (
   req,
   res
 ) => {
-  const { username, email, password } = req.body;
-  res.sendStatus(500);
+  createUser(req.body)
+    .then((user) => {
+      console.log("User created:", user);
+      res.sendStatus(200);
+    })
+    .catch((error) => {
+      console.error("Failure while creating user:", error);
+      res.sendStatus(500);
+    });
 };
