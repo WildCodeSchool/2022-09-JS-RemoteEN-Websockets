@@ -60,7 +60,7 @@ export const registerUser: RequestHandler<{}, {}, RegisterUserRequestBody> = (
   createUser(req.body)
     .then((user) => {
       console.log("User created:", user);
-      res.sendStatus(200);
+      res.sendStatus(201);
     })
     .catch((error) => {
       console.error("Failure while creating user:", error);

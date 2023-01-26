@@ -6,8 +6,9 @@ import "./App.css";
 import MessageList from "./components/MessageList";
 import MessageEditor from "./components/MessageEditor";
 import { SocketIOContext } from "./context/SocketIOContext";
+import Login from "./components/Login";
 
-const API_URL = "http://localhost:5050";
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5050";
 
 const socket = socketIOclient(API_URL, {
   autoConnect: false,
@@ -17,36 +18,31 @@ const socket = socketIOclient(API_URL, {
   },
 });
 
+type LoginState = "LOADING" | "LOGGED_IN" | "LOGGED_OUT";
+
 function App() {
+  const [loginState, setLoginState] = useState<LoginState>("LOADING");
+
   const [authToken, setAuthToken] = useState(
     localStorage.getItem("auth_token")
   );
 
   useEffect(() => {
     if (authToken == null) {
-      console.log("Requesting token");
-      axios
-        .post(API_URL + "/auth/login", {
-          username: "davidmc971",
-          password: "wilder123",
-        })
-        .then((response) => response.data)
-        .then((data) => {
-          console.log("Setting token state");
-          setAuthToken(data);
-        });
+      setLoginState("LOGGED_OUT");
       return;
     }
     if (localStorage.getItem("auth_token") !== authToken) {
       console.log("Setting token in localStorage");
       localStorage.setItem("auth_token", authToken);
     }
+    setLoginState("LOGGED_IN");
     console.log("Connecting socket");
     socket.connect();
     return () => {
       console.log("Disconnecting socket");
       socket.disconnect();
-    }
+    };
   }, [authToken]);
 
   useEffect(() => {
@@ -54,8 +50,7 @@ function App() {
     // Next we register our listeners on the newly created socket
     console.log("App: Registering listeners...");
     socket.on("errorInvalidToken", () => {
-      localStorage.removeItem("auth_token");
-      setAuthToken(null);
+      handleLogout();
     });
     return () => {
       console.log("App: Deregistering listeners...");
@@ -63,11 +58,32 @@ function App() {
     };
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token");
+    setAuthToken(null);
+  };
+
   return (
     <SocketIOContext.Provider value={socket}>
       <div className="App">
-        <MessageList />
-        <MessageEditor />
+        {loginState === "LOADING" ? (
+          <p>Loading...</p>
+        ) : loginState === "LOGGED_OUT" ? (
+          <Login setAuthToken={setAuthToken} />
+        ) : (
+          <>
+            <MessageList />
+            <MessageEditor />
+            <br />
+            <button
+              style={{ backgroundColor: "transparent", color: "#222222" }}
+              type="button"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </>
+        )}
       </div>
     </SocketIOContext.Provider>
   );
