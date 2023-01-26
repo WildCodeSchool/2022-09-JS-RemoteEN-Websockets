@@ -93,12 +93,10 @@ websocket.on("connection", async (clientSocket) => {
   });
 
   clientSocket.emit("initialMessageList", messages);
-  clientSocket.on("messageFromClient", (messageTextAndAuthor: MessageDraft) => {
+  clientSocket.on("messageFromClient", (messageText: Omit<MessageDraft, "author">) => {
     const newMessage: Message = {
-      author: DOMPurify.sanitize(messageTextAndAuthor.author, {
-        ALLOWED_TAGS: [],
-      }),
-      text: DOMPurify.sanitize(messageTextAndAuthor.text, {
+      author: user.username,
+      text: DOMPurify.sanitize(messageText.text, {
         ALLOWED_TAGS: ["b"],
       }),
       id: crypto.randomUUID(),
