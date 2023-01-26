@@ -8,7 +8,7 @@ import { createServer } from "http";
 import { Server as WebSocketServer } from "socket.io";
 import createDOMPurify from "dompurify";
 import { JSDOM } from "jsdom";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 import { Message, MessageDraft } from "common/types/message";
 import { User, UserDraft, UserView } from "common/types/user";
@@ -56,7 +56,18 @@ websocket.on("connection", (clientSocket) => {
     return;
   }
 
-  const payload = jwt.verify(token, process.env.JWT_SECRET!);
+  let payload: string | JwtPayload;
+
+  try {
+    payload = jwt.verify(token, process.env.JWT_SECRET!);
+  } catch (error) {
+    console.error(error);
+    console.log("Invalid token.");
+    clientSocket.emit("errorInvalidToken");
+    clientSocket.disconnect();
+    return;
+  }
+
   const user = users.find(
     (user) => user.username.toLowerCase() === payload.sub
   );

@@ -49,6 +49,20 @@ function App() {
     }
   }, [authToken]);
 
+  useEffect(() => {
+    if (socket == null) return;
+    // Next we register our listeners on the newly created socket
+    console.log("App: Registering listeners...");
+    socket.on("errorInvalidToken", () => {
+      localStorage.removeItem("auth_token");
+      setAuthToken(null);
+    });
+    return () => {
+      console.log("App: Deregistering listeners...");
+      socket.off("errorInvalidToken");
+    };
+  }, []);
+
   return (
     <SocketIOContext.Provider value={socket}>
       <div className="App">
